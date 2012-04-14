@@ -1,0 +1,55 @@
+i18n - lesson (painfully) learnt
+================================
+:author:    Robert Pankowecki
+:copyright: Robert Pankowecki
+:backend:   slidy
+:max-width: 45em
+:data-uri:
+:icons:
+:language: ruby
+:pygments:
+
+
+Robert Pankowecki ???
+---------------------
+
+image:/home/rupert/Dropbox/drug/wroclawrb/logos/drug-logo-name-rect-sq.png[]
+image:/home/rupert/Dropbox/drug/wroclawrb/krasnal.png[]
+image:/home/rupert/Dropbox/drug/arkency.png[]
+image:/home/rupert/Dropbox/Photos/rupert_outside_bw.jpg[]
+
+* github:  @paneq
+* twitter: @pankowecki
+* gtalk:   robert.pankowecki
+* cv:      robert.pankowecki.pl
+* blog:    blog.robert.pankowecki.pl
+* company: rails.arkency.com
+* conference: wrocloverb.com
+
+
+== Requirements
+
+* multiple deploys
+* easy to change per deploy
+* different naming conventions
+* words often repeated
+
+
+== HATE_MODE_ON
+
+* Seriously :)
+
+== I18n - kinda sucks ??
+
+* There is no place to say that word "X" means "Y"
+* Yep!
+
+[source]
+---------------------------------------------------------------------------------
+Author.model_name.human s
+Comment.human_attribute_name(:author)
+---------------------------------------------------------------------------------
+
+* returns "author" in english
+* requires 2 translations for every other language
+* still 2 if you want use en < - > en translation and prefer "Writer" insted of "Author"
