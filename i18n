@@ -53,3 +53,296 @@ Comment.human_attribute_name(:author)
 * returns "author" in english
 * requires 2 translations for every other language
 * still 2 if you want use en < - > en translation and prefer "Writer" insted of "Author"
+
+
+== Problem: I18n (Solution)
+
+* scope: humanize.*
+* more about it later
+
+== Usecase: Sentence on the view page
+
+* ActionView::Helpers::TranslationHelper#translate
+* t
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+t("matz_is_nice_so_be_nice_but_still_constructive")
+---------------------------------------------------------------------------------
+
+* No namespacing? What is it? PHP?
+
+== Usecase: Sentence on the view page (dot operator)
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+t(".matz_is_nice_so_be_nice_but_still_constructive")
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+pl:
+  books:
+    index:
+      matz_is_nice_so_be_nice_but_still_constructive: "Konstruktywny feedback zawsze mile widziany"
+---------------------------------------------------------------------------------
+
+* Sentances are not widely repreated across application (IMHO)
+* No need to optimize
+
+== Usecase: Sentence on the view page (use "sentence" namespace)
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+t(".sentence.matz_is_nice_so_be_nice_but_still_constructive")
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+pl:
+  books:
+    index:
+      sentence:
+        matz_is_nice_so_be_nice_but_still_constructive: "Konstruktywny feedback zawsze mile widziany"
+---------------------------------------------------------------------------------
+
+== Usecase: Sentence on the view page (ss)
+
+* scoped_sentence
+* ss
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+ss("matz_is_nice_so_be_nice_but_still_constructive")
+#t(".sentence.matz_is_nice_so_be_nice_but_still_constructive")
+---------------------------------------------------------------------------------
+
+== Usecase: Single word on view page
+
+[source]
+---------------------------------------------------------------------------------
+t("navigation")
+t("actions")
+---------------------------------------------------------------------------------
+
+* again, flat structure?
+* DHH: X > 13 => chaos
+
+== Usecase: Single word on view page (humanize)
+
+[source]
+---------------------------------------------------------------------------------
+t("humanize.navigation")
+t("humanize.actions")
+---------------------------------------------------------------------------------
+
+* at least a namespace
+* require to change source of the page if needed to translate differently on
+  different page
+
+
+== Usecase: Single word on view page (dot)
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+t(".navigation")
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/author/new.html.erb
+t(".navigation")
+---------------------------------------------------------------------------------
+
+* can be translated differently on different pages
+* lack of default
+
+
+== Usecase: Single word on view page (default)
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+t(".navigation", :default => "humanize.navigation")
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/author/new.html.erb
+t(".navigation", :default => "humanize.navigation")
+---------------------------------------------------------------------------------
+
+* WOW! Really? Should I write it every time like that ?
+
+== Usecase: Single word on view page (@)
+
+* Rails uses "." notation
+* So I can have my own, can I?
+* "@" was born
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+t("@navigation")
+# == t(".navigation", :default => "humanize.navigation")
+---------------------------------------------------------------------------------
+
+* Can be changed per single page
+* Still has sensible default
+
+== Usecase: Single word on view page (Plural)
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/books/index.html.erb
+# t(".actions", :default => "humanize.actions") # BAD
+t(".action", :default => "humanize.action", :count => 2)
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+# app/views/author/new.html.erb
+t(".action", :default => "humanize.action", :count => 2)
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+pl:
+  humanize:
+    action:
+      one:  "Akcja"
+      few:  "Akcje"
+      many: "Akcji"
+---------------------------------------------------------------------------------
+
+* unknown number of plural items => not all languages use the form that is used when speaking about two obejcts
+
+
+== Usecase: Single word on view page (sh / ph)
+
+* singular_humanize (sh)
+* plural_humanize (ph)
+
+[source]
+---------------------------------------------------------------------------------
+ph("@action")
+# t(".action", :default => "humanize.action", :count => 2)
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+sh("@navigation")
+# t(".navigation", :default => "humanize.navigation", :count => 1)
+---------------------------------------------------------------------------------
+
+* Abstraction for translating 1 word
+* Crazy enough ?
+* :count => N for different languages
+
+
+== Usecase: Sentence in a controller
+
+[source]
+---------------------------------------------------------------------------------
+class PapersController < ApplicationController
+  def create
+    @paper = Paper.new(params[:paper])
+
+    if @paper.save
+      redirect_to @paper, notice: I18n.t(:paper_created_flash_message)
+    else
+      flash[:alert] = I18n.t(:error_creating_paper)
+      render action: :new
+    end
+  end
+end
+---------------------------------------------------------------------------------
+
+* no namespacing
+* no t() / must use I18n.t
+* no "." notation
+
+
+== Usecase: Sentence in a controller (dot notation)
+
+* include ActionView::Helpers::TagHelper
+* include ActionView::Helpers::TranslationHelper
+* implement only scope_key_by_partial(key)
+
+[source]
+---------------------------------------------------------------------------------
+class PapersController < ApplicationController
+  def create
+    @paper = Paper.new(params[:paper])
+    if @paper.save
+      redirect_to @paper, notice: t(".sentence.paper_created_flash_message")
+    else
+      flash[:alert] = t(".sentence.error_creating_paper")
+      render action: :new
+    end
+  end
+end
+---------------------------------------------------------------------------------
+
+* "sentence" everywhere, problem already solved
+
+
+== Usecase: Sentence in a controller (most often used) [1]
+
+[source]
+---------------------------------------------------------------------------------
+module Sentences
+  def has_been_created
+    flash.notice = ss(:has_been_created)
+  end
+  def could_not_create
+    flash.now.alert = ss(:could_not_create)
+  end
+  def scoped_sentence(key, options = {})
+    t(".sentence.#{key}", options)
+  end
+  alias_method(:ss, :scoped_sentence)
+end
+---------------------------------------------------------------------------------
+
+
+== Usecase: Sentence in a controller (most often used) [2]
+
+[source]
+---------------------------------------------------------------------------------
+class PapersController < ApplicationController
+  def create
+    @paper = Paper.new(params[:paper])
+    if @paper.save
+      has_been_created
+      redirect_to @paper
+    else
+      could_not_create
+      render action: :new
+    end
+  end
+end
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+pl:  
+  papers:
+    sentence:
+      has_been_created:   "Zgłosiłeś się na konferencję"
+      could_not_create:   "Nie tym razem"
+---------------------------------------------------------------------------------
+
+* Ordnung !
+
+== I got smarter in the meantime
+
+* "Communication between controllers and views via symbol messages"
+* http://blog.robert.pankowecki.pl/2011/12/communication-between-controllers-and.html
+* Don't generate any kind of messages, ui parts in controller
+* Rails-way (repeated hundred times in every tutorial) is WRONG!
