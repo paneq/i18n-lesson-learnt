@@ -31,8 +31,9 @@ image:/home/rupert/Dropbox/Photos/rupert_outside_bw.jpg[]
 
 * multiple deploys
 * easy to change per deploy
-* different naming conventions
+* customers have different naming conventions
 * words often repeated
+* writing framework actually
 
 
 == HATE_MODE_ON
@@ -46,7 +47,7 @@ image:/home/rupert/Dropbox/Photos/rupert_outside_bw.jpg[]
 
 [source]
 ---------------------------------------------------------------------------------
-Author.model_name.human s
+Author.model_name.human
 Comment.human_attribute_name(:author)
 ---------------------------------------------------------------------------------
 
@@ -89,7 +90,7 @@ pl:
       matz_is_nice_so_be_nice_but_still_constructive: "Konstruktywny feedback zawsze mile widziany"
 ---------------------------------------------------------------------------------
 
-* Sentances are not widely repreated across application (IMHO)
+* Sentences are not widely repreated across application (IMHO)
 * No need to optimize
 
 == Usecase: Sentence on the view page (use "sentence" namespace)
@@ -100,7 +101,7 @@ pl:
 t(".sentence.matz_is_nice_so_be_nice_but_still_constructive")
 ---------------------------------------------------------------------------------
 
-[source]
+[source, text]
 ---------------------------------------------------------------------------------
 pl:
   books:
@@ -595,3 +596,119 @@ link_to action(Post, :new), new_post_path
 <% end %>
 ---------------------------------------------------------------------------------
 
+
+== Will it work ?
+
+=== Disaster
+* refactoring is nightmare
+* moving view files around, changing namespace, renaming
+* breaks every translation != humanize.*
+* hard to determine file to change/fix translation (lot of rules)
+* what's translated and what is not ?
+
+== That bad ?
+
+=== Good parts
+
+* almost everything was de facto translated based on model
+* humanize.* is cool (not sure why no such thing rails by default)
+* humanize.* unused in Polish language when different gramaticall gender
+
+[source,text]
+---------------------------------------------------------------------------------
+pl:
+  humanize:
+    new: Nowy
+  activerecord:
+   actions:
+     book:
+       new: Nowa
+---------------------------------------------------------------------------------
+
+== Conclusion ?
+=== Part 1
+* never go for the "." notation in views
+* don't try to mimick it in controllers
+* separate code/view namespacing from translations namespacing, the later won't break when chaning the further
+
+[source]
+---------------------------------------------------------------------------------
+t("admin.sentence.could_not_obay_your_will_lord") 
+# admin translation namespace handwritten
+
+plural_humanize("person", "action") => 
+I18n.t("person.humanize.action", :default => "humanize.action", :count => 2)
+---------------------------------------------------------------------------------
+
+
+== Conclusion ?
+=== Part 2
+* make human_attribute_name smarter
+
+[source]
+---------------------------------------------------------------------------------
+Post.human_attribute_name(:comments) =>
+#should use reflection to find has_many :comments association class and use
+Comment.model_name.human(:count => 2)
+---------------------------------------------------------------------------------
+
+[source]
+---------------------------------------------------------------------------------
+Comment.human_attribute_name(:author) =>
+#should use reflection to find belongs_to :author association class and use
+Author.model_name.human(:count => 1)
+---------------------------------------------------------------------------------
+
+
+== Conclusion ?
+=== Part 3
+* using english words as keys for translation might be problematic without meta information
+[source]
+---------------------------------------------------------------------------------
+# Fastgettext
+_("New")
+#vs
+_("Book|New")
+---------------------------------------------------------------------------------
+
+
+== Conclusion ?
+=== Part 4
+* way easier with 1 customer - 1 deploy scenario
+* best practices ?
+* fastgettext ?
+
+== Fastgettext
+* english in source code?
+* english to english translation ?
+
+=== pluralization
+[source]
+---------------------------------------------------------------------------------
+#translate pluralized
+# some languages have up to 4 plural forms...
+# n_(singular, plural, plural form 2, ..., count)
+# n_('apple','apples',3)
+def n_(*keys)
+end
+---------------------------------------------------------------------------------
+
+== Fastgettext
+=== errors
+
+[source]
+---------------------------------------------------------------------------------
+# Option A:
+# Define a translation for "I need my rating!" and use it as message.
+validates_inclusion_of :rating, :in=>1..5, :message=>N('I need my rating!')
+
+#Option B:
+validates_inclusion_of :rating, :in=>1..5
+#Make a translation for the I18n key:
+#activerecord.errors.models.rating.attributes.rating.inclusion
+
+#Option C:
+#
+#Add a translation to each config/locales/*.yml files 
+#en: activerecord: errors: models: rating: attributes: rating: inclusion: " -- please choose!" 
+---------------------------------------------------------------------------------

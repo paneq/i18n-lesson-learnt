@@ -4637,12 +4637,17 @@ easy to change per deploy
 </li>
 <li>
 <span>
-different naming conventions
+customers have different naming conventions
 </span>
 </li>
 <li>
 <span>
 words often repeated
+</span>
+</li>
+<li>
+<span>
+writing framework actually
 </span>
 </li>
 </ul>
@@ -4676,7 +4681,7 @@ Yep!
 </li>
 </ul>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="no">Author</span><span class="o">.</span><span class="n">model_name</span><span class="o">.</span><span class="n">human</span> <span class="n">s</span>
+<div class="content"><div class="highlight"><pre><span class="no">Author</span><span class="o">.</span><span class="n">model_name</span><span class="o">.</span><span class="n">human</span>
 <span class="no">Comment</span><span class="o">.</span><span class="n">human_attribute_name</span><span class="p">(</span><span class="ss">:author</span><span class="p">)</span>
 </pre></div></div></div>
 <ul class="">
@@ -4759,7 +4764,7 @@ No namespacing? What is it? PHP?
 <ul class="">
 <li>
 <span>
-Sentances are not widely repreated across application (IMHO)
+Sentences are not widely repreated across application (IMHO)
 </span>
 </li>
 <li>
@@ -4778,11 +4783,11 @@ No need to optimize
 <span class="n">t</span><span class="p">(</span><span class="s2">&quot;.sentence.matz_is_nice_so_be_nice_but_still_constructive&quot;</span><span class="p">)</span>
 </pre></div></div></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="n">pl</span><span class="p">:</span>
-  <span class="n">books</span><span class="p">:</span>
-    <span class="n">index</span><span class="p">:</span>
-      <span class="n">sentence</span><span class="p">:</span>
-        <span class="n">matz_is_nice_so_be_nice_but_still_constructive</span><span class="p">:</span> <span class="s2">&quot;Konstruktywny feedback zawsze mile widziany&quot;</span>
+<div class="content"><div class="highlight"><pre>pl:
+  books:
+    index:
+      sentence:
+        matz_is_nice_so_be_nice_but_still_constructive: &quot;Konstruktywny feedback zawsze mile widziany&quot;
 </pre></div></div></div>
 </div>
 </div>
@@ -5495,6 +5500,229 @@ Mostly just fallbacks to human_action_name (previous slide)
 <span class="sx">                   # Post.human_action_name(:create)</span>
 <span class="sx">&lt;% end %&gt;</span>
 </pre></div></div></div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_will_it_work">Will it work ?</h1>
+<div class="sectionbody" style="max-width:45em">
+<div class="sect2">
+<h3 id="_disaster">Disaster</h3>
+<ul class="">
+<li>
+<span>
+refactoring is nightmare
+</span>
+</li>
+<li>
+<span>
+moving view files around, changing namespace, renaming
+</span>
+</li>
+<li>
+<span>
+breaks every translation != humanize.*
+</span>
+</li>
+<li>
+<span>
+hard to determine file to change/fix translation (lot of rules)
+</span>
+</li>
+<li>
+<span>
+what&#8217;s translated and what is not ?
+</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_that_bad">That bad ?</h1>
+<div class="sectionbody" style="max-width:45em">
+<div class="sect2">
+<h3 id="_good_parts">Good parts</h3>
+<ul class="">
+<li>
+<span>
+almost everything was de facto translated based on model
+</span>
+</li>
+<li>
+<span>
+humanize.* is cool (not sure why no such thing rails by default)
+</span>
+</li>
+<li>
+<span>
+humanize.* unused in Polish language when different gramaticall gender
+</span>
+</li>
+</ul>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre>pl:
+  humanize:
+    new: Nowy
+  activerecord:
+   actions:
+     book:
+       new: Nowa
+</pre></div></div></div>
+</div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_conclusion">Conclusion ?</h1>
+<div class="sectionbody" style="max-width:45em">
+<div class="sect2">
+<h3 id="_part_1">Part 1</h3>
+<ul class="">
+<li>
+<span>
+never go for the "." notation in views
+</span>
+</li>
+<li>
+<span>
+don&#8217;t try to mimick it in controllers
+</span>
+</li>
+<li>
+<span>
+separate code/view namespacing from translations namespacing, the later won&#8217;t break when chaning the further
+</span>
+</li>
+</ul>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="n">t</span><span class="p">(</span><span class="s2">&quot;admin.sentence.could_not_obay_your_will_lord&quot;</span><span class="p">)</span>
+<span class="c1"># admin translation namespace handwritten</span>
+
+<span class="n">plural_humanize</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">)</span> <span class="o">=&gt;</span>
+<span class="no">I18n</span><span class="o">.</span><span class="n">t</span><span class="p">(</span><span class="s2">&quot;person.humanize.action&quot;</span><span class="p">,</span> <span class="ss">:default</span> <span class="o">=&gt;</span> <span class="s2">&quot;humanize.action&quot;</span><span class="p">,</span> <span class="ss">:count</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div></div></div>
+</div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_conclusion_2">Conclusion ?</h1>
+<div class="sectionbody" style="max-width:45em">
+<div class="sect2">
+<h3 id="_part_2">Part 2</h3>
+<ul class="">
+<li>
+<span>
+make human_attribute_name smarter
+</span>
+</li>
+</ul>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="no">Post</span><span class="o">.</span><span class="n">human_attribute_name</span><span class="p">(</span><span class="ss">:comments</span><span class="p">)</span> <span class="o">=&gt;</span>
+<span class="c1">#should use reflection to find has_many :comments association class and use</span>
+<span class="no">Comment</span><span class="o">.</span><span class="n">model_name</span><span class="o">.</span><span class="n">human</span><span class="p">(</span><span class="ss">:count</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div></div></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="no">Comment</span><span class="o">.</span><span class="n">human_attribute_name</span><span class="p">(</span><span class="ss">:author</span><span class="p">)</span> <span class="o">=&gt;</span>
+<span class="c1">#should use reflection to find belongs_to :author association class and use</span>
+<span class="no">Author</span><span class="o">.</span><span class="n">model_name</span><span class="o">.</span><span class="n">human</span><span class="p">(</span><span class="ss">:count</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div></div></div>
+</div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_conclusion_3">Conclusion ?</h1>
+<div class="sectionbody" style="max-width:45em">
+<div class="sect2">
+<h3 id="_part_3">Part 3</h3>
+<ul class="">
+<li>
+<span>
+using english words as keys for translation might be problematic without meta information
+</span>
+</li>
+</ul>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="c1"># Fastgettext</span>
+<span class="n">_</span><span class="p">(</span><span class="s2">&quot;New&quot;</span><span class="p">)</span>
+<span class="c1">#vs</span>
+<span class="n">_</span><span class="p">(</span><span class="s2">&quot;Book|New&quot;</span><span class="p">)</span>
+</pre></div></div></div>
+</div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_conclusion_4">Conclusion ?</h1>
+<div class="sectionbody" style="max-width:45em">
+<div class="sect2">
+<h3 id="_part_4">Part 4</h3>
+<ul class="">
+<li>
+<span>
+way easier with 1 customer - 1 deploy scenario
+</span>
+</li>
+<li>
+<span>
+best practices ?
+</span>
+</li>
+<li>
+<span>
+fastgettext ?
+</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_fastgettext">Fastgettext</h1>
+<div class="sectionbody" style="max-width:45em">
+<ul class="">
+<li>
+<span>
+english in source code?
+</span>
+</li>
+<li>
+<span>
+english to english translation ?
+</span>
+</li>
+</ul>
+<div class="sect2">
+<h3 id="_pluralization">pluralization</h3>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="c1">#translate pluralized</span>
+<span class="c1"># some languages have up to 4 plural forms...</span>
+<span class="c1"># n_(singular, plural, plural form 2, ..., count)</span>
+<span class="c1"># n_(&#39;apple&#39;,&#39;apples&#39;,3)</span>
+<span class="k">def</span> <span class="nf">n_</span><span class="p">(</span><span class="o">*</span><span class="n">keys</span><span class="p">)</span>
+<span class="k">end</span>
+</pre></div></div></div>
+</div>
+</div>
+</div>
+<div class="sect1 slide">
+<h1 id="_fastgettext_2">Fastgettext</h1>
+<div class="sectionbody" style="max-width:45em">
+<div class="sect2">
+<h3 id="_errors">errors</h3>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="c1"># Option A:</span>
+<span class="c1"># Define a translation for &quot;I need my rating!&quot; and use it as message.</span>
+<span class="n">validates_inclusion_of</span> <span class="ss">:rating</span><span class="p">,</span> <span class="ss">:in</span><span class="o">=&gt;</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span><span class="p">,</span> <span class="ss">:message</span><span class="o">=&gt;</span><span class="n">N</span><span class="p">(</span><span class="s1">&#39;I need my rating!&#39;</span><span class="p">)</span>
+
+<span class="c1">#Option B:</span>
+<span class="n">validates_inclusion_of</span> <span class="ss">:rating</span><span class="p">,</span> <span class="ss">:in</span><span class="o">=&gt;</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span>
+<span class="c1">#Make a translation for the I18n key:</span>
+<span class="c1">#activerecord.errors.models.rating.attributes.rating.inclusion</span>
+
+<span class="c1">#Option C:</span>
+<span class="c1">#</span>
+<span class="c1">#Add a translation to each config/locales/*.yml files</span>
+<span class="c1">#en: activerecord: errors: models: rating: attributes: rating: inclusion: &quot; -- please choose!&quot;</span>
+</pre></div></div></div>
+</div>
 </div>
 </div>
 </body>
