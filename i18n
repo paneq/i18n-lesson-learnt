@@ -346,3 +346,252 @@ pl:
 * http://blog.robert.pankowecki.pl/2011/12/communication-between-controllers-and.html
 * Don't generate any kind of messages, ui parts in controller
 * Rails-way (repeated hundred times in every tutorial) is WRONG!
+
+== Usecase: Model name
+
+* example
+
+[source]
+---------------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                    %                                   %
+%    Post                            %          Author                   %
+%                                    %                                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                 %                  %                   %               %
+%   Topic         %  Created at      %  Nick             % Last name     %
+%                 %                  %                   %               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Cooking        % Yesterday        % rupert            % Pankowecki   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Dancing        % Today            % rupert            % Pankowecki   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+---------------------------------------------------------------------------------
+
+== Usecase: Model name (Rails way)
+
+* Author.model_name.human
+
+[source]
+---------------------------------------------------------------------------------
+pl:
+  activerecord:
+    models:
+      author: Autor
+---------------------------------------------------------------------------------
+
+
+== Usecase: Model name (My way)
+
+* Author.model_name.human
+
+[source]
+---------------------------------------------------------------------------------
+pl:
+  activerecord:
+    models:
+      author: Autor # first
+  humanize:
+    author: Autor   # second => sensible default
+---------------------------------------------------------------------------------
+
+== Usecase: column name
+
+* forms
+* tables
+
+[source]
+---------------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                    %                                   %
+%    Post                            %          Author                   %
+%                                    %                                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                 %                  %                   %               %
+%   Topic         %  Created at      %  Nick             % Last name     %
+%                 %                  %                   %               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Cooking        % Yesterday        % rupert            % Pankowecki   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Dancing        % Today            % rupert            % Pankowecki   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+---------------------------------------------------------------------------------
+
+
+== Usecase: column name
+
+* human_attribute_name
+
+[source]
+---------------------------------------------------------------------------------
+# Rails evaluation for Comment.human_attribute_name(:author) :
+#
+# :"activerecord.attributes.comments.author"
+# :"attributes.author",
+# "Author"
+#
+# vs:
+#
+# :"activerecord.attributes.comments.author"
+# :"attributes.author",
+# :"humanize.author",
+# "Author"
+#
+def human_attribute_name(attribute, options = {})
+end
+---------------------------------------------------------------------------------
+
+== So far so good
+
+* Comment.human_attribute_name(:author)
+* Author.model_name.human
+* Simple and consistent
+
+[source]
+---------------------------------------------------------------------------------
+pl:
+  humanize:
+    author: Autor   # sensible default
+---------------------------------------------------------------------------------
+
+== Usecase: column value 
+
+[source]
+---------------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                    %                                   %
+%    Post                            %          Author                   %
+%                                    %                                   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                 %                  %                   %               %
+%   Topic         %  Status          %  Nick             % Last name     %
+%                 %                  %                   %               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Cooking        % Published        % rupert            % Pankowecki   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  Dancing        % Scheduled        % rupert            % Pankowecki   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+---------------------------------------------------------------------------------
+
+
+== Usecase: column value
+
+* no such thing in rails
+* most used in translating state machine values
+* on tables list
+* form filters based on state
+
+[source]
+---------------------------------------------------------------------------------
+# Post.human_attribute_value_name(:status, :published)
+# Post.human_attribute_value_name(:status, post.status) 
+# => "Opublikowany"
+#
+# :"activerecord.values.post.status.published"
+# :"values.status.published",
+# :"humanize.published",
+# "Published"
+#
+def human_attribute_value_name(attribute, value, options = {})
+end
+---------------------------------------------------------------------------------
+
+
+== Usecase: action name [1]
+
+* button names (Create / Update)
+* links for actions (New / Edit)
+* action_by_model (next slide)
+
+[source]
+---------------------------------------------------------------------------------
+# Post.human_action_name(:publish) # => "Opublikuj"
+#
+# :"activerecord.actions.post.publish"
+# :"actions.publish",
+# :"humanize.publish",
+# "Publish"
+#
+def human_action_name(action, options = {})
+end
+---------------------------------------------------------------------------------
+
+
+== Usecase: action name [2]
+
+* Extreme customization for customers!
+* Mostly just fallbacks to human_action_name (previous slide)
+
+[source]
+---------------------------------------------------------------------------------
+ def action(model, a)
+    model = model.class unless model.is_a?(Class)
+    action_by_site_and_model(model, a) ||
+    action_by_site(a) ||
+    action_by_controller_and_model(model, a) ||
+    action_by_controller(a) ||
+    action_by_model(model, a)
+  end
+end
+---------------------------------------------------------------------------------
+
+
+== Usecase: action name [2]
+
+[source]
+---------------------------------------------------------------------------------
+# single item
+action(post, :edit)
+action(post, :destroy)
+
+# collection
+action(Post, :index)
+action(Post, :new)
+---------------------------------------------------------------------------------
+
+
+== Usecase: action name [3]
+
+[source]
+---------------------------------------------------------------------------------
+posts.each do |post|
+  link_to action(post, :edit),    edit_post_path(post)
+  link_to action(post, :destroy), post_path(post), :method => :delete
+end
+
+link_to action(Post, :new), new_post_path
+---------------------------------------------------------------------------------
+
+
+== Usecase: action name (formtastic integration) [1]
+
+[source]
+---------------------------------------------------------------------------------
+<%= semantic_form_for(@post) do |f| %>
+  <%= f.inputs do %>
+    <%= f.input :title %>
+    <%= f.input :body %>
+  <% end %>
+
+  <%= f.named_button(:publish) %>  # action(post, :publish)
+                                   # Post.human_action_name(:publish)
+  <%= f.named_button(:schedule) %>
+<% end %>
+---------------------------------------------------------------------------------
+
+
+== Usecase: action name (formtastic integration) [2]
+
+[source]
+---------------------------------------------------------------------------------
+<%= semantic_form_for(@post) do |f| %>
+  <%= f.inputs do %>
+    <%= f.input :title %>
+    <%= f.input :body %>
+  <% end %>
+
+  <%= f.buttons %> # :create / :update / :submit based on persistance
+                   # Post.human_action_name(:create)
+<% end %>
+---------------------------------------------------------------------------------
+
